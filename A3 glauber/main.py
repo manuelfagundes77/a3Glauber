@@ -1,49 +1,56 @@
-from geolocalizacao import encontrar_centro_proximo
-from caminhoes import escolher_caminhao
+from geolocalizacao import encontrar_centro_proximo, cidades_destino
 from entregas import Entrega, entregas
+from caminhoes import escolher_caminhao
 
-def main():
-    while True:
-        print("\n📦 **Sistema de Gerenciamento de Entregas**")
-        print("1️ - Adicionar nova entrega")
-        print("2️ - Ver todas as entregas")
-        print("0️ - Sair")
-        
-        opcao = input("Escolha uma opção: ")
+# Função para exibir as cidades disponíveis para entrega
+def exibir_cidades_disponiveis():
+    print("\n" * 2) 
+    print("Cidades disponíveis para entrega:", end=" ")
+    print(", ".join(cidades_destino))
 
-        if opcao == "1":
-            cidade_destino = input("\n🏙 Digite a cidade de destino: ")
-            peso = float(input("📦 Digite o peso da carga (kg): "))
+while True:
+    # Exibe as cidades disponíveis para entrega
+    exibir_cidades_disponiveis()
+    
+    print("\n==== MENU ====")
+    print("1 - Realizar nova entrega")
+    print("2 - Ver entregas realizadas")
+    print("0 - Sair")
+    opcao = input("Escolha uma opção: ")
 
-            centro, distancia = encontrar_centro_proximo(cidade_destino)
-
-            if centro:
-                caminhao, consumo, prazo = escolher_caminhao(centro, peso, distancia)
-
-                if caminhao is not None:  # Apenas cadastra se houver caminhão disponível
-                    entrega = Entrega(cidade_destino, centro, distancia, caminhao, prazo)
-                    entregas.append(entrega)
-                    print("\n✅ **Entrega cadastrada com sucesso!**\n")
-                    print(entrega.detalhes_entrega())
-                else:
-                    print("\n❌ Todos os caminhões do centro de distribuição estão ocupados.")
+    if opcao == "1":
+        while True:
+            cidade_destino = input("Digite a cidade de destino: ").strip().title()
+            if cidade_destino in cidades_destino:
+                break
             else:
-                print("\n❌ Não foi possível encontrar a cidade.")
+                print("Cidade inválida. Escolha entre:", ", ".join(cidades_destino))
 
-        elif opcao == "2":
-            if entregas:
-                print("\n📜 **Lista de todas as entregas cadastradas:**\n")
-                for entrega in entregas:
-                    print(entrega.detalhes_entrega())
-            else:
-                print("\n❌ Nenhuma entrega cadastrada ainda.")
+        peso = float(input("Digite o peso da carga (em kg, peso máximo 14000): "))
 
-        elif opcao == "0":
-            print("\n🚪 Saindo do sistema... Até mais!")
-            break
+        centro, distancia = encontrar_centro_proximo(cidade_destino)
 
+        if centro is None:
+            print("Não foi possível localizar a cidade.")
+            continue
+
+        caminhao, consumo, prazo, custo, horas_estimadas = escolher_caminhao(centro, peso, distancia)
+
+        if caminhao is not None:
+            entrega = Entrega(cidade_destino, centro, distancia, caminhao, prazo, custo, horas_estimadas, peso)
+            entregas.append(entrega)
+            print(entrega.detalhes_entrega())
+
+    elif opcao == "2":
+        if not entregas:
+            print("Nenhuma entrega registrada.")
         else:
-            print("\n❌ Opção inválida. Tente novamente.")
+            for entrega in entregas:
+                print(entrega.detalhes_entrega())
 
-if __name__ == "__main__":
-    main()
+    elif opcao == "0":
+        print("Encerrando o sistema.")
+        break
+
+    else:
+        print("Opção inválida. Tente novamente.")
